@@ -33,6 +33,23 @@ export function onStorageChange(handler) {
   return () => window.removeEventListener('storage', handler);
 }
 
+/**
+ * CSS dəyişəninin dəyəri (məs. `--c-accent`) — canvas-da rəngi koda yazmamaq üçün.
+ * @param {Element} element
+ * @param {string} name
+ * @returns {string}
+ */
+export function readCssVar(element, name) {
+  if (typeof window === 'undefined') return '';
+  return window.getComputedStyle(element).getPropertyValue(name).trim();
+}
+
+/** @returns {number}  Ekranın piksel sıxlığı (canvas üçün, maks. 2) */
+export function getPixelRatio() {
+  if (typeof window === 'undefined') return 1;
+  return Math.min(window.devicePixelRatio || 1, 2);
+}
+
 /** Səhifəni yenidən yükləyir (Service Worker yeni versiyanı aktivləşdirəndə). */
 export function reloadPage() {
   if (typeof window !== 'undefined') window.location.reload();

@@ -8,7 +8,7 @@
  */
 
 import { preloadAll } from '../core/assets.js';
-import { prefersReducedMotion } from '../core/env.js';
+import { getPixelRatio, prefersReducedMotion, readCssVar } from '../core/env.js';
 import { shuffleUntilChanged } from '../core/shuffle.js';
 import { addResult, clearBestTime, getBestTime, getOutbox, setBestTime } from '../core/storage.js';
 import { ResultSync, createId, fetchRemoteResults } from '../core/sync.js';
@@ -17,10 +17,12 @@ import { Timer, formatDateTime, formatTime } from '../core/Timer.js';
 import { GameEngine } from '../game/GameEngine.js';
 import { BoardView } from '../game/BoardView.js';
 import { TrayView } from '../game/TrayView.js';
-import { flyFrom } from '../game/animations.js';
+import { celebrate, flyFrom } from '../game/animations.js';
 
-/** Son hissənin animasiyasından sonra RESULT-a qədər gözləmə (bölmə 2.2) */
+/** Son hissənin animasiyasından (və tamamlanma firework-ündən) sonra RESULT-a qədər gözləmə (bölmə 2.2) */
 const RESULT_DELAY_MS = 500;
+/** Firework-dən sonra nəticə ekranına qədər qısa fasilə */
+const AFTER_CELEBRATION_MS = 200;
 
 /** @typedef {'rules' | 'start' | 'game' | 'result'} ScreenState */
 
@@ -67,6 +69,8 @@ export class PuzzleApp {
   #animations = new Set();
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   #resultTimeout;
+  /** @type {import('../game/animations.js').Celebration | null} */
+  #celebration = null;
   /** Hərəkətsizlik taymeri: `idleResetMs` ərzində toxunuş olmasa rules ekranına qayıdılır */
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   #idleTimeout;
@@ -277,6 +281,8 @@ export class PuzzleApp {
 
   #cancelGameWork() {
     clearTimeout(this.#resultTimeout);
+    this.#celebration?.cancel();
+    this.#celebration = null;
     for (const animation of this.#animations) animation.cancel();
     this.#animations.clear();
     this.#flights.clear();
@@ -312,7 +318,7 @@ export class PuzzleApp {
     this.#flights.add(flight);
   }
 
-  /** 12/12: taymer dayanır, rekord yoxlanılır, son animasiya + 500ms sonra RESULT. */
+  /** 12/12: taymer dayanır, rekord yoxlanılır, son hissə oturur → firework → RESULT. */
   async #onCompleted() {
     const { city } = this.options;
     const gameId = this.#gameId;
@@ -334,9 +340,28 @@ export class PuzzleApp {
 
     await Promise.all(this.#flights);
     if (gameId !== this.#gameId) return;
+
+    const delay = await this.#celebrate() ? AFTER_CELEBRATION_MS : RESULT_DELAY_MS;
+    if (gameId !== this.#gameId) return;
     this.#resultTimeout = setTimeout(() => {
       if (gameId === this.#gameId) this.show('result');
-    }, RESULT_DELAY_MS);
+    }, delay);
+  }
+
+  /**
+   * Tamamlanma firework-ü (board üzərində). reduced-motion-da göstərilmir.
+   * @returns {Promise<boolean>}  Göstərildisə true
+   */
+  async #celebrate() {
+    const stage = /** @type {HTMLElement | null} */ (this.root.querySelector('.cp-stage'));
+    const board = /** @type {HTMLElement | null} */ (this.root.querySelector('[data-board]'));
+    if (!stage || !board || prefersReducedMotion()) return false;
+
+    const colors = ['--c-accent', '--c-text', '--c-text-muted'].map((name) => readCssVar(this.root, name)).filter(Boolean);
+    this.#celebration = celebrate(stage, board, { colors, pixelRatio: getPixelRatio() });
+    await this.#celebration.finished;
+    this.#celebration = null;
+    return true;
   }
 
   /**

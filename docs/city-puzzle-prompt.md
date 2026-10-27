@@ -337,7 +337,7 @@ export const SETTINGS = {
   restartTarget: 'rules',
   allowPieceFirst: true,
   errorResetMs: 700,
-  idleResetMs: 30000,   // toxunuş olmasa rules ekranına qayıt (0 = söndür)
+  idleResetMs: 60000,   // toxunuş olmasa rules ekranına qayıt (0 = söndür)
 };
 
 export const DEBUG = false; // true → dev düyməsi görünür (bax: 9.1)
