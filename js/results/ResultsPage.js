@@ -5,7 +5,7 @@
  * Bu cihazın hələ göndərilməmiş nəticələri (növbə) də əlavə olunur. Sheets əlçatmazdırsa, bu cihazın
  * localStorage-ı göstərilir. Səhifə hər 30 saniyədən bir özü yenilənir.
  *
- * Sıra: 1) ən yaxşı nəticə (yaşıl), 2) son oyun, sonra qalanları yenidən köhnəyə.
+ * Sıra: 1) ən yaxşı nəticə (yaşıl), sonra qalanları yenidən köhnəyə (2-ci sətir = son oyun, təkrar yoxdur).
  * "SIFIRLA" → təsdiq popup-ı → əvvəl Google Cədvəl, sonra bu cihazdakı bütün məlumatlar silinir.
  * @module results/ResultsPage
  */
@@ -212,8 +212,8 @@ export class ResultsPage {
 const entryKey = (entry) => `${entry.label}|${entry.ms}`;
 
 /**
- * Cədvəl sırası: 1) ən yaxşı nəticə (bərabərlikdə daha əvvəlki oyun), 2) son oyun,
- * sonra qalanları yenidən köhnəyə. Son oyun eyni zamanda ən yaxşıdırsa, 2-ci sətirdə də göstərilir.
+ * Cədvəl sırası: 1) ən yaxşı nəticə (bərabərlikdə daha əvvəlki oyun), sonra qalanları yenidən köhnəyə —
+ * yəni 2-ci sətir həmişə son oyundur; son oyun ən yaxşıdırsa təkrarlanmır, 2-ci sətirdə ondan əvvəlki oyun olur.
  * `number` — xronoloji sıra nömrəsi (1 = ilk oyun).
  * @param {ResultEntry[]} entries  Xronoloji sıra ilə
  * @returns {ResultRow[]}
@@ -224,8 +224,6 @@ export function orderRows(entries) {
 
   let best = rows[0];
   for (const row of rows) if (row.ms < best.ms) best = row;
-  const latest = rows[rows.length - 1];
 
-  const rest = rows.filter((r) => r !== best && r !== latest).reverse();
-  return rows.length === 1 ? [best] : [best, latest, ...rest];
+  return [best, ...rows.filter((r) => r !== best).reverse()];
 }
