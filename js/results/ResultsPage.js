@@ -16,6 +16,9 @@ const pad = (n) => String(n).padStart(2, '0');
 /** @param {Date} d */
 const formatClock = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 
+/** @param {Date} d */
+const formatDate = (d) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+
 export class ResultsPage {
   /** @type {HTMLElement} */
   root;
@@ -58,7 +61,8 @@ export class ResultsPage {
       const tr = body.insertRow();
       if (row === best) tr.className = 'cp-table__best';
       tr.insertCell().textContent = String(row.number);
-      tr.insertCell().textContent = formatClock(new Date(row.at));
+      const at = new Date(row.at);
+      tr.insertCell().textContent = `${formatDate(at)} - ${formatClock(at)}`;
       tr.insertCell().textContent = formatTime(row.ms);
     }
     table.append(body);
