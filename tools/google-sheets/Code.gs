@@ -4,6 +4,7 @@
  * Kiosk hər bitmiş oyunu bu Web App-ə POST edir, nəticə "Nəticələr" vərəqinə yazılır.
  * Eyni nəticə iki dəfə gəlsə (internet kəsilib təkrar göndəriləndə), "tarix-saat + ms" cütünə görə təkrar yazılmır.
  * /result səhifəsində SIFIRLA → { action: 'reset' } → başlıqdan başqa bütün sətirlər silinir.
+ * /result səhifəsi GET ?action=list ilə nəticələri oxuyur → bütün cihazlarda eyni cədvəl.
  *
  * Quraşdırma: Extensions → Apps Script → bu kodu yapışdır → Deploy → New deployment → Web app
  *   Execute as: Me   ·   Who has access: Anyone
@@ -63,9 +64,31 @@ function doPost(e) {
   }
 }
 
-/** Brauzerdə linki açanda işlədiyini yoxlamaq üçün */
-function doGet() {
+/**
+ * GET ?action=list → { ok, results: [{ local, ms }] } (cədvəldəki sıra ilə, köhnədən yeniyə)
+ * GET (parametrsiz) → işlədiyini yoxlamaq üçün
+ */
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'list') {
+    try {
+      return json_({ ok: true, results: readResults_() });
+    } catch (err) {
+      return json_({ ok: false, error: String(err) });
+    }
+  }
   return json_({ ok: true, sheet: SHEET_NAME });
+}
+
+/** Düzgün formatlı sətirləri oxuyur (köhnə və ya əl ilə yazılmış yanlış sətirlər atlanır). */
+function readResults_() {
+  const sheet = getSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+  return sheet
+    .getRange(2, 1, lastRow - 1, 3)
+    .getValues()
+    .map((r) => ({ local: String(r[0]), ms: Number(r[2]) }))
+    .filter((r) => r.local && Number.isFinite(r.ms) && r.ms > 0);
 }
 
 /**

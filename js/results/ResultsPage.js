@@ -1,15 +1,33 @@
 /**
- * Nəticələr səhifəsi (/result): localStorage-dakı oyunlar cədvəldə (ən yaxşı birinci, sonra saata görə),
- * "SIFIRLA" → təsdiq popup-ı → əvvəl Google Cədvəl (qoşulubsa), sonra bu cihazdakı bütün məlumatlar silinir.
+ * Nəticələr səhifəsi (/result).
+ *
+ * Mənbə: Google Sheets qoşulubsa nəticələr oradan oxunur → bütün cihazlarda eyni cədvəl.
+ * Bu cihazın hələ göndərilməmiş nəticələri (növbə) də əlavə olunur. Sheets əlçatmazdırsa, bu cihazın
+ * localStorage-ı göstərilir. Səhifə hər 30 saniyədən bir özü yenilənir.
+ *
+ * Sıra: 1) ən yaxşı nəticə (yaşıl), 2) son oyun, sonra qalanları yenidən köhnəyə.
+ * "SIFIRLA" → təsdiq popup-ı → əvvəl Google Cədvəl, sonra bu cihazdakı bütün məlumatlar silinir.
  * @module results/ResultsPage
  */
 
 import { fetchSvg } from '../core/assets.js';
 import { onStorageChange } from '../core/env.js';
-import { clearAllData, getResults } from '../core/storage.js';
-import { resetRemote } from '../core/sync.js';
+import { clearAllData, getOutbox, getResults } from '../core/storage.js';
+import { fetchRemoteResults, resetRemote } from '../core/sync.js';
 import { onTap } from '../core/tap.js';
 import { formatDateTime, formatTime } from '../core/Timer.js';
+
+const REFRESH_MS = 30000;
+
+/**
+ * @typedef {Object} ResultEntry  Xronoloji sırada bir oyun
+ * @property {string} label  "dd.mm.yyyy - hh:mm:ss"
+ * @property {number} ms
+ */
+
+/**
+ * @typedef {ResultEntry & { number: number }} ResultRow
+ */
 
 export class ResultsPage {
   /** @type {HTMLElement} */
@@ -18,6 +36,10 @@ export class ResultsPage {
   #logoUrl;
   #sheetsUrl;
   #isResetting = false;
+  /** Köhnə sorğunun cavabı yenisini əzməsin */
+  #loadId = 0;
+  /** @type {ReturnType<typeof setInterval> | undefined} */
+  #refreshTimer;
   /** @type {Array<() => void>} */
   #unbinders = [];
 
@@ -35,33 +57,80 @@ export class ResultsPage {
   async mount() {
     this.#unbinders.push(
       onTap(this.root, '[data-action]', (target) => this.#handleAction(target.getAttribute('data-action') ?? '')),
-      onStorageChange(() => this.render()),
+      onStorageChange(() => this.refresh()),
     );
-    this.render();
+    if (this.#sheetsUrl) this.#refreshTimer = setInterval(() => this.refresh(), REFRESH_MS);
 
     const logo = this.root.querySelector('[data-svg="logo"]');
-    if (logo) logo.innerHTML = await fetchSvg(this.#logoUrl); // öz assetimiz
+    await Promise.all([
+      this.refresh(),
+      fetchSvg(this.#logoUrl).then((svg) => {
+        if (logo) logo.innerHTML = svg; // öz assetimiz
+      }),
+    ]);
   }
 
-  /** Cədvəli localStorage-dan yenidən qurur: birinci sətir ən yaxşı nəticə (yaşıl), sonra qalanları yenidən köhnəyə. */
-  render() {
-    const results = getResults(this.#cityId);
-    const { best, rest } = orderRows(results);
+  /** Nəticələri (Sheets və ya lokal) yükləyib cədvəli yenidən çəkir. */
+  async refresh() {
+    const loadId = ++this.#loadId;
+    const local = this.#localEntries();
+
+    if (!this.#sheetsUrl) {
+      this.#draw(local, null);
+      return;
+    }
+    if (loadId === 1) this.#draw(local, 'loading'); // ilk açılışda gözləmədən lokal göstər
+
+    try {
+      const remote = (await fetchRemoteResults(this.#sheetsUrl)).map((r) => ({ label: r.local, ms: Math.round(r.ms) }));
+      if (loadId !== this.#loadId) return;
+      // Bu cihazın hələ göndərilməmiş nəticələri sonda (onlar ən yenilərdir)
+      const known = new Set(remote.map(entryKey));
+      const pending = getOutbox()
+        .map((item) => ({ label: item.local, ms: Math.round(item.ms) }))
+        .filter((entry) => !known.has(entryKey(entry)));
+      this.#draw([...remote, ...pending], 'remote');
+    } catch {
+      if (loadId === this.#loadId) this.#draw(local, 'offline');
+    }
+  }
+
+  destroy() {
+    for (const unbind of this.#unbinders) unbind();
+    this.#unbinders = [];
+    clearInterval(this.#refreshTimer);
+    this.#loadId++;
+    this.#dialog()?.close();
+  }
+
+  /** @returns {ResultEntry[]} */
+  #localEntries() {
+    return getResults(this.#cityId)
+      .sort((a, b) => a.at - b.at)
+      .map((r) => ({ label: formatDateTime(new Date(r.at)), ms: r.ms }));
+  }
+
+  /**
+   * @param {ResultEntry[]} entries  Xronoloji sıra ilə
+   * @param {'loading' | 'remote' | 'offline' | null} source  null = Sheets qoşulmayıb
+   */
+  #draw(entries, source) {
+    const rows = orderRows(entries);
     const doc = this.root.ownerDocument;
     const table = /** @type {HTMLTableElement} */ (this.root.querySelector('.cp-table'));
 
     for (const body of [...table.tBodies]) body.remove();
     const body = doc.createElement('tbody');
-    for (const row of best ? [best, ...rest] : rest) {
+    rows.forEach((row, i) => {
       const tr = body.insertRow();
-      if (row === best) tr.className = 'cp-table__best';
+      if (i === 0) tr.className = 'cp-table__best';
       tr.insertCell().textContent = String(row.number);
-      tr.insertCell().textContent = formatDateTime(new Date(row.at));
+      tr.insertCell().textContent = row.label;
       tr.insertCell().textContent = formatTime(row.ms);
-    }
+    });
     table.append(body);
 
-    const hasRows = results.length > 0;
+    const hasRows = entries.length > 0;
     table.classList.toggle('has-rows', hasRows);
     /** @type {HTMLElement} */ (this.root.querySelector('[data-empty]')).hidden = hasRows;
     // Sheets qoşulubsa, bu cihazda nəticə olmasa da Google Cədvəl sıfırlana bilər
@@ -71,15 +140,18 @@ export class ResultsPage {
     const summary = this.root.querySelector('[data-summary]');
     if (summary) {
       summary.textContent = hasRows
-        ? `Cəmi: ${results.length} oyun · Ən yaxşı: ${formatTime(Math.min(...results.map((r) => r.ms)))}`
+        ? `Cəmi: ${entries.length} oyun · Ən yaxşı: ${formatTime(rows[0].ms)}`
         : '';
     }
-  }
 
-  destroy() {
-    for (const unbind of this.#unbinders) unbind();
-    this.#unbinders = [];
-    this.#dialog()?.close();
+    const sourceEl = this.root.querySelector('[data-source]');
+    if (sourceEl) {
+      sourceEl.textContent =
+        source === 'remote' ? 'Google Cədvəl · bütün cihazlarda eyni'
+        : source === 'loading' ? 'Google Cədvəl yüklənir…'
+        : source === 'offline' ? 'Google Cədvələ qoşulmaq alınmadı · bu cihazın nəticələri göstərilir'
+        : '';
+    }
   }
 
   /** @param {string} action */
@@ -110,7 +182,7 @@ export class ResultsPage {
       if (this.#sheetsUrl) await resetRemote(this.#sheetsUrl);
       clearAllData();
       this.#dialog()?.close();
-      this.render();
+      await this.refresh();
     } catch {
       this.#setResetState('error');
     } finally {
@@ -136,24 +208,24 @@ export class ResultsPage {
   }
 }
 
-/**
- * @typedef {{ number: number, at: number, ms: number }} ResultRow
- */
+/** @param {ResultEntry} entry */
+const entryKey = (entry) => `${entry.label}|${entry.ms}`;
 
 /**
- * Ən yaxşı nəticəni (bərabərlikdə daha əvvəlki oyun) ayırır, qalanlarını yenidən köhnəyə sıralayır.
- * `number` — bütün oyunlar üzrə xronoloji sıra nömrəsi (1 = ilk oyun).
- * @param {import('../core/storage.js').GameResult[]} results
- * @returns {{ best: ResultRow | null, rest: ResultRow[] }}
+ * Cədvəl sırası: 1) ən yaxşı nəticə (bərabərlikdə daha əvvəlki oyun), 2) son oyun,
+ * sonra qalanları yenidən köhnəyə. Son oyun eyni zamanda ən yaxşıdırsa, 2-ci sətirdə də göstərilir.
+ * `number` — xronoloji sıra nömrəsi (1 = ilk oyun).
+ * @param {ResultEntry[]} entries  Xronoloji sıra ilə
+ * @returns {ResultRow[]}
  */
-export function orderRows(results) {
-  const rows = [...results]
-    .sort((a, b) => a.at - b.at)
-    .map((r, i) => ({ number: i + 1, at: r.at, ms: r.ms }));
+export function orderRows(entries) {
+  const rows = entries.map((entry, i) => ({ ...entry, number: i + 1 }));
+  if (!rows.length) return [];
 
-  /** @type {ResultRow | null} */
-  let best = null;
-  for (const row of rows) if (!best || row.ms < best.ms) best = row;
+  let best = rows[0];
+  for (const row of rows) if (row.ms < best.ms) best = row;
+  const latest = rows[rows.length - 1];
 
-  return { best, rest: rows.filter((r) => r !== best).reverse() };
+  const rest = rows.filter((r) => r !== best && r !== latest).reverse();
+  return rows.length === 1 ? [best] : [best, latest, ...rest];
 }

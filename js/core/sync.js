@@ -43,6 +43,27 @@ async function post(url, payload) {
 }
 
 /**
+ * Google Cədvəldəki nəticələri oxuyur (cədvəldəki sıra ilə, köhnədən yeniyə).
+ * @param {string} url
+ * @returns {Promise<Array<{ local: string, ms: number }>>}  Uğursuz olsa xəta atılır
+ */
+export async function fetchRemoteResults(url) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(`${url}?action=list`, { signal: controller.signal, cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (!data?.ok || !Array.isArray(data.results)) throw new Error(data?.error ?? 'Naməlum cavab');
+    return data.results
+      .map((/** @type {any} */ r) => ({ local: String(r.local ?? ''), ms: Number(r.ms) }))
+      .filter((r) => r.local && Number.isFinite(r.ms) && r.ms > 0);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
  * Google Cədvəldəki bütün nəticələri silir.
  * @param {string} url
  * @returns {Promise<void>}  Uğursuz olsa xəta atılır

@@ -1,4 +1,9 @@
-/* GAME ekranı: taymer, board, ipucu, tray. Piece vəziyyətləri növbəti mərhələdə əlavə olunacaq. */
+/* GAME ekranı: taymer, board, ipucu, tray, hissə vəziyyətləri və shake animasiyası. */
+
+/* Dizaynda tray-in altında ≈26px qalır; 9:16-da auto margin-lər 0 olsun deyə bu boşluq sabitdir */
+.cp-screen--game {
+  padding-bottom: calc(26 * var(--u));
+}
 
 /* ---------- Taymer bloku ---------- */
 
@@ -43,6 +48,7 @@
   position: relative;
   flex: none;
   align-self: center;
+  margin-top: auto; /* ekran 9:16-dan hündürdürsə: board + tray bloku şaquli mərkəzdə */
   width: calc(800 * var(--u));
   height: calc(600 * var(--u));
 }
@@ -104,7 +110,7 @@
 /* ---------- İpucu ---------- */
 
 .cp-hint {
-  flex: none;
+  flex: none; /* header və düymə kimi kənardan 64px (dizayn) */
   margin-top: calc(36 * var(--u));
   font-size: calc(29 * var(--u));
   font-weight: 400;
@@ -118,7 +124,8 @@
   flex: none;
   grid-template-columns: repeat(4, calc(260 * var(--u)));
   grid-template-rows: repeat(3, calc(260 * var(--u)));
-  margin: calc(20 * var(--u)) calc(-44 * var(--u)) 0;
+  align-self: center; /* 1040 > 952: hər iki tərəfə bərabər çıxır */
+  margin: calc(20 * var(--u)) 0 auto;
 }
 
 .cp-tray__cell {
