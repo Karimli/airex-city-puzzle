@@ -126,6 +126,12 @@ body {
   font-weight: 400;
 }
 
+/* Birinci sətir: ən yaxşı nəticə */
+.cp-table .cp-table__best td {
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
 .cp-table:not(.has-rows) {
   display: none;
 }

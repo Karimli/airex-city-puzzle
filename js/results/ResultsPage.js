@@ -62,6 +62,23 @@ export class ResultsPage {
     const table = /** @type {HTMLTableElement} */ (this.root.querySelector('.cp-table'));
 
     for (const body of [...table.tBodies]) body.remove();
+
+    // Birinci sətir: ən yaxşı nəticə (bərabərlikdə daha əvvəlki oyun), yaşıl
+    const best = groups.flatMap((g) => g.rows).reduce(
+      (a, b) => (!a || b.ms < a.ms || (b.ms === a.ms && b.at < a.at) ? b : a),
+      /** @type {HourGroup['rows'][number] | null} */ (null),
+    );
+    if (best) {
+      const body = doc.createElement('tbody');
+      body.className = 'cp-table__best';
+      const tr = body.insertRow();
+      const at = new Date(best.at);
+      tr.insertCell().textContent = String(best.number);
+      tr.insertCell().textContent = `ƏN YAXŞI · ${formatDate(at)} · ${formatClock(at)}`;
+      tr.insertCell().textContent = formatTime(best.ms);
+      table.append(body);
+    }
+
     for (const group of groups) {
       const body = doc.createElement('tbody');
 
