@@ -1,5 +1,5 @@
 /**
- * Nəticələr səhifəsi (/result): localStorage-dakı oyunlar saata görə qruplaşdırılmış cədvəldə,
+ * Nəticələr səhifəsi (/result): localStorage-dakı oyunlar cədvəldə (ən yaxşı birinci, sonra saata görə),
  * "SIFIRLA" → təsdiq popup-ı → oyunun bütün məlumatları silinir.
  * @module results/ResultsPage
  */
@@ -14,16 +14,7 @@ import { formatTime } from '../core/Timer.js';
 const pad = (n) => String(n).padStart(2, '0');
 
 /** @param {Date} d */
-const formatDate = (d) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
-
-/** @param {Date} d */
 const formatClock = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-
-/**
- * @typedef {Object} HourGroup
- * @property {Date} start  Saatın başlanğıcı
- * @property {Array<{ number: number, at: number, ms: number }>} rows  Yenidən köhnəyə
- */
 
 export class ResultsPage {
   /** @type {HTMLElement} */
@@ -54,56 +45,23 @@ export class ResultsPage {
     if (logo) logo.innerHTML = await fetchSvg(this.#logoUrl); // öz assetimiz
   }
 
-  /** Cədvəli localStorage-dan yenidən qurur. */
+  /** Cədvəli localStorage-dan yenidən qurur: birinci sətir ən yaxşı nəticə (yaşıl), sonra qalanları yenidən köhnəyə. */
   render() {
     const results = getResults(this.#cityId);
-    const groups = groupByHour(results);
+    const { best, rest } = orderRows(results);
     const doc = this.root.ownerDocument;
     const table = /** @type {HTMLTableElement} */ (this.root.querySelector('.cp-table'));
 
     for (const body of [...table.tBodies]) body.remove();
-
-    // Birinci sətir: ən yaxşı nəticə (bərabərlikdə daha əvvəlki oyun), yaşıl
-    const best = groups.flatMap((g) => g.rows).reduce(
-      (a, b) => (!a || b.ms < a.ms || (b.ms === a.ms && b.at < a.at) ? b : a),
-      /** @type {HourGroup['rows'][number] | null} */ (null),
-    );
-    if (best) {
-      const body = doc.createElement('tbody');
-      body.className = 'cp-table__best';
+    const body = doc.createElement('tbody');
+    for (const row of best ? [best, ...rest] : rest) {
       const tr = body.insertRow();
-      const at = new Date(best.at);
-      tr.insertCell().textContent = String(best.number);
-      tr.insertCell().textContent = `ƏN YAXŞI · ${formatDate(at)} · ${formatClock(at)}`;
-      tr.insertCell().textContent = formatTime(best.ms);
-      table.append(body);
+      if (row === best) tr.className = 'cp-table__best';
+      tr.insertCell().textContent = String(row.number);
+      tr.insertCell().textContent = formatClock(new Date(row.at));
+      tr.insertCell().textContent = formatTime(row.ms);
     }
-
-    for (const group of groups) {
-      const body = doc.createElement('tbody');
-
-      const head = body.insertRow();
-      head.className = 'cp-table__group';
-      const th = doc.createElement('th');
-      th.colSpan = 3;
-      th.scope = 'rowgroup';
-      const end = new Date(group.start.getTime() + 3600_000);
-      th.textContent = `${formatDate(group.start)} · ${pad(group.start.getHours())}:00–${pad(end.getHours())}:00`;
-      const meta = doc.createElement('span');
-      meta.className = 'cp-table__group-meta';
-      const best = Math.min(...group.rows.map((r) => r.ms));
-      meta.textContent = `${group.rows.length} oyun · ən yaxşı ${formatTime(best)}`;
-      th.append(meta);
-      head.append(th);
-
-      for (const row of group.rows) {
-        const tr = body.insertRow();
-        tr.insertCell().textContent = String(row.number);
-        tr.insertCell().textContent = formatClock(new Date(row.at));
-        tr.insertCell().textContent = formatTime(row.ms);
-      }
-      table.append(body);
-    }
+    table.append(body);
 
     const hasRows = results.length > 0;
     table.classList.toggle('has-rows', hasRows);
@@ -148,26 +106,23 @@ export class ResultsPage {
 }
 
 /**
- * Nəticələri saat başlanğıcına görə qruplaşdırır; həm qruplar, həm sətirlər yenidən köhnəyə.
+ * @typedef {{ number: number, at: number, ms: number }} ResultRow
+ */
+
+/**
+ * Ən yaxşı nəticəni (bərabərlikdə daha əvvəlki oyun) ayırır, qalanlarını yenidən köhnəyə sıralayır.
  * `number` — bütün oyunlar üzrə xronoloji sıra nömrəsi (1 = ilk oyun).
  * @param {import('../core/storage.js').GameResult[]} results
- * @returns {HourGroup[]}
+ * @returns {{ best: ResultRow | null, rest: ResultRow[] }}
  */
-export function groupByHour(results) {
-  const numbered = [...results]
+export function orderRows(results) {
+  const rows = [...results]
     .sort((a, b) => a.at - b.at)
-    .map((r, i) => ({ number: i + 1, at: r.at, ms: r.ms }))
-    .reverse();
+    .map((r, i) => ({ number: i + 1, at: r.at, ms: r.ms }));
 
-  /** @type {Map<number, HourGroup>} */
-  const groups = new Map();
-  for (const row of numbered) {
-    const start = new Date(row.at);
-    start.setMinutes(0, 0, 0);
-    const key = start.getTime();
-    let group = groups.get(key);
-    if (!group) groups.set(key, (group = { start, rows: [] }));
-    group.rows.push(row);
-  }
-  return [...groups.values()];
+  /** @type {ResultRow | null} */
+  let best = null;
+  for (const row of rows) if (!best || row.ms < best.ms) best = row;
+
+  return { best, rest: rows.filter((r) => r !== best).reverse() };
 }

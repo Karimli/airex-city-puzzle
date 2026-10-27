@@ -116,18 +116,8 @@ body {
   text-align: right;
 }
 
-/* Saat başlığı: "27.10.2026 · 14:00–15:00" + "3 oyun · ən yaxşı 00:31" */
-.cp-table__group th {
-  font-weight: 700;
-}
-
-.cp-table__group-meta {
-  float: right;
-  font-weight: 400;
-}
-
 /* Birinci sətir: ən yaxşı nəticə */
-.cp-table .cp-table__best td {
+.cp-table__best td {
   color: var(--c-accent);
   font-weight: 700;
 }
