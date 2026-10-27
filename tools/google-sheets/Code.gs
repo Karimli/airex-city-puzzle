@@ -2,7 +2,7 @@
  * AIREX City Puzzle → Google Sheets
  *
  * Kiosk hər bitmiş oyunu bu Web App-ə POST edir, nəticə "Nəticələr" vərəqinə yazılır.
- * Eyni nəticə iki dəfə gəlsə (internet kəsilib təkrar göndəriləndə), ID-yə görə təkrar yazılmır.
+ * Eyni nəticə iki dəfə gəlsə (internet kəsilib təkrar göndəriləndə), "tarix-saat + ms" cütünə görə təkrar yazılmır.
  * /result səhifəsində SIFIRLA → { action: 'reset' } → başlıqdan başqa bütün sətirlər silinir.
  *
  * Quraşdırma: Extensions → Apps Script → bu kodu yapışdır → Deploy → New deployment → Web app
@@ -10,11 +10,11 @@
  */
 
 const SHEET_NAME = 'Nəticələr';
-const HEADERS = ['ID', 'Tarix - saat', 'Vaxt', 'Vaxt (ms)', 'Şəhər'];
+const HEADERS = ['Tarix - saat', 'Vaxt', 'Vaxt (ms)'];
 
 /**
  * Kioskdan gələn sorğular:
- *   { results: [{ id, at, local, ms, city }] }  → nəticələri yazır
+ *   { results: [{ id, at, local, ms, city }] }  → nəticələri yazır (id və city cədvələ yazılmır)
  *   { action: 'reset' }                          → bütün nəticələri silir
  */
 function doPost(e) {
@@ -29,21 +29,32 @@ function doPost(e) {
 
     const lastRow = sheet.getLastRow();
     const known = new Set(
-      lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 1).getValues().map((r) => String(r[0])) : [],
+      lastRow > 1
+        ? sheet.getRange(2, 1, lastRow - 1, 3).getValues().map((r) => key_(r[0], r[2]))
+        : [],
     );
 
     const rows = [];
+    const accepted = [];
     for (const r of incoming) {
-      const id = String(r.id || '');
-      const ms = Number(r.ms);
-      if (!id || known.has(id) || !Number.isFinite(ms) || ms <= 0) continue;
-      known.add(id);
-      rows.push([id, String(r.local || ''), formatTime_(ms), Math.round(ms), String(r.city || '')]);
+      const ms = Math.round(Number(r.ms));
+      const local = String(r.local || '');
+      if (!local || !Number.isFinite(ms) || ms <= 0) continue;
+      const key = key_(local, ms);
+      if (!known.has(key)) {
+        known.add(key);
+        rows.push([local, formatTime_(ms), ms]);
+      }
+      // Kiosk bu ID-ləri növbədən silir (yeni yazılanlar + əvvəldən olanlar)
+      accepted.push(String(r.id || ''));
     }
-    if (rows.length) sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
+    if (rows.length) {
+      const range = sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length);
+      // "00:47" Sheets-də saat:dəqiqə kimi oxunmasın: tarix və vaxt mətn formatında
+      range.offset(0, 0, rows.length, 2).setNumberFormat('@');
+      range.setValues(rows);
+    }
 
-    // Kiosk bu ID-ləri növbədən silir (yeni yazılanlar + əvvəldən olanlar)
-    const accepted = incoming.map((r) => String(r.id || '')).filter((id) => known.has(id));
     return json_({ ok: true, saved: rows.length, accepted });
   } catch (err) {
     return json_({ ok: false, error: String(err) });
@@ -78,6 +89,11 @@ function getSheet_() {
     sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
   }
   return sheet;
+}
+
+/** Təkrarlanmanı tanımaq üçün açar: kioskun yerli tarix-saatı + müddət (ms) */
+function key_(local, ms) {
+  return String(local) + '|' + Math.round(Number(ms));
 }
 
 function formatTime_(ms) {
