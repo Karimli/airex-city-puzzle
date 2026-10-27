@@ -1,0 +1,5 @@
+<svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="25" cy="25" r="25" class="error-x__bg"/>
+<path d="M14 35.6768L35.677 13.9998" stroke-width="6" class="error-x__mark"/>
+<path d="M14.0044 14L35.6814 35.677" stroke-width="6" class="error-x__mark"/>
+</svg>

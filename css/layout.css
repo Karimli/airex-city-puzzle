@@ -1,0 +1,248 @@
+/* Səhnə, header, ekranlar, düymələr. Bütün ölçülər 1080×1920 baza dizayndan: calc(N * var(--u)) */
+
+/* ---------- Kök + səhnə (letterbox) ---------- */
+
+.cp-app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  container-type: size;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--c-bg);
+}
+
+/* Preload bitənə qədər (bölmə 6.1): yalnız fon görünür */
+.cp-app.is-loading .cp-stage {
+  visibility: hidden;
+}
+
+.cp-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: calc(1080 * var(--u));
+  height: calc(1920 * var(--u));
+  padding: 0 calc(64 * var(--u));
+}
+
+/* ---------- Header ---------- */
+
+.cp-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(66 * var(--u));
+  margin-top: calc(64 * var(--u));
+}
+
+.cp-header__logo {
+  width: calc(248 * var(--u));
+  height: calc(67 * var(--u));
+  color: var(--c-accent);
+}
+
+/* Inline yerləşdirilən SVG-lər qutunu tam doldurur */
+[data-svg] > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.cp-header__brand {
+  margin-top: calc(10 * var(--u));
+  font-size: calc(30 * var(--u));
+  font-weight: 600;
+  line-height: 1;
+  color: var(--c-text-muted);
+}
+
+/* ---------- Ekranlar ---------- */
+
+.cp-screen {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cp-screen.is-active {
+  display: flex;
+}
+
+/* ---------- Başlıq + divider ---------- */
+
+.cp-title {
+  flex: none;
+  padding: calc(53 * var(--u)) 0 calc(25 * var(--u));
+  border-bottom: max(1px, calc(1 * var(--u))) solid var(--c-divider);
+  font-size: calc(76 * var(--u));
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.cp-title--rules {
+  padding: calc(47 * var(--u)) 0 calc(60 * var(--u));
+  line-height: 1.2;
+}
+
+.cp-title__accent {
+  color: var(--c-accent);
+}
+
+/* ---------- Əsas düymə ---------- */
+
+.cp-button {
+  flex: none;
+  width: 100%;
+  height: calc(160 * var(--u));
+  margin-top: auto;
+  margin-bottom: calc(64 * var(--u));
+  padding: 0;
+  border-radius: 0;
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+  font-size: calc(44 * var(--u));
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---------- Ümumi ---------- */
+
+.cp-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* "ƏN YAXŞI VAXT: 00:39" — start və result */
+.cp-best-line {
+  font-size: calc(34 * var(--u));
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  color: var(--c-text-muted);
+}
+
+/* ---------- 01 · RULES ---------- */
+
+.cp-rule {
+  display: flex;
+  align-items: center;
+  height: calc(339 * var(--u));
+  border-bottom: max(1px, calc(1 * var(--u))) solid var(--c-divider);
+}
+
+.cp-rule__num {
+  flex: none;
+  width: calc(105 * var(--u));
+  font-size: calc(40 * var(--u));
+  font-weight: 500;
+  color: var(--c-accent);
+}
+
+.cp-rule__text {
+  flex: 1;
+  max-width: calc(600 * var(--u));
+  font-size: calc(46 * var(--u));
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.cp-rule__icon {
+  flex: none;
+  width: calc(112 * var(--u));
+  height: calc(112 * var(--u));
+  margin: 0 calc(24 * var(--u)) 0 auto;
+  color: var(--c-text-muted);
+}
+
+/* ---------- 02 · START ---------- */
+
+.cp-start__image {
+  flex: none;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  margin-top: calc(195 * var(--u));
+}
+
+.cp-screen--start .cp-best-line {
+  margin-top: auto;
+  margin-bottom: calc(150 * var(--u));
+}
+
+.cp-screen--start .cp-button {
+  margin-top: 0;
+}
+
+/* ---------- 07 · RESULT ---------- */
+
+.cp-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cp-result__label {
+  margin-top: calc(71 * var(--u));
+  font-size: calc(62 * var(--u));
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cp-result__time {
+  margin-top: calc(24 * var(--u));
+  font-size: calc(240 * var(--u));
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.cp-result__record {
+  display: none;
+  margin-top: calc(24 * var(--u));
+  font-size: calc(44 * var(--u));
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-accent);
+}
+
+.cp-result__record.is-active {
+  display: block;
+}
+
+.cp-result .cp-best-line {
+  margin-top: calc(80 * var(--u));
+}
+
+.cp-result__image {
+  flex: none;
+  object-fit: cover;
+  width: calc(800 * var(--u));
+  height: calc(600 * var(--u));
+  margin: auto auto 0;
+}
+
+.cp-screen--result .cp-button {
+  margin-top: calc(144 * var(--u));
+}
+
+/* ---------- Dev düyməsi (yalnız DEBUG / ?dev, bölmə 9.1) ---------- */
+
+.cp-dev-button {
+  position: absolute;
+  top: calc(170 * var(--u));
+  right: calc(64 * var(--u));
+  z-index: 100;
+  min-width: calc(90 * var(--u));
+  height: calc(90 * var(--u));
+  padding: 0 calc(28 * var(--u));
+  border: calc(3 * var(--u)) dashed var(--c-accent);
+  background: var(--c-bg);
+  color: var(--c-accent);
+  font-size: calc(26 * var(--u));
+  font-weight: 700;
+}

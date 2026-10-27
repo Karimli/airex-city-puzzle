@@ -1,0 +1,45 @@
+/* Kiosk reset — modern-normalize-dan sonra qoşulur (bölmə 6.1) */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--c-bg);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cp-app {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation; /* double-tap zoom yoxdur */
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+  -webkit-user-drag: none;
+}
+
+button {
+  font: inherit;
+  border: 0;
+  cursor: pointer;
+}
+
+h1,
+h2,
+p,
+ol {
+  margin: 0;
+}
+
+ol {
+  padding: 0;
+  list-style: none;
+}

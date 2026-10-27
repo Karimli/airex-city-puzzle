@@ -1,0 +1,27 @@
+/* Dizayn tokenləri: rənglər, şrift, --u ölçü vahidi (bölmə 3.1, 3.2, 4) */
+
+:root {
+  /* Təsdiqlənmiş rənglər */
+  --c-accent:     #C7FF00; /* yaşıl: düymələr, seçim, vurğu, ən yaxşı vaxt */
+  --c-bg:         #262A37; /* əsas fon */
+  --c-text-muted: #C3C6C8; /* "CITY PUZZLE", "VAXT", "ƏN YAXŞI VAXT" etiketləri */
+  --c-text:       #FFFFFF; /* ağ */
+  --c-error:      #FB7232; /* yanlış seçim: kontur + ✕ dairəsi */
+
+  /* Törəmə rənglər (yuxarıdakılardan) */
+  --c-accent-ink:  var(--c-bg);           /* yaşıl düymə üzərindəki mətn */
+  --c-stroke:      var(--c-text-muted);   /* puzzle sahəsi və hissələrin boz konturu */
+  --c-divider:     rgb(195 198 200 / 0.2); /* muted rəngin 20%-i */
+
+  /* Şrift */
+  --font-base: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.cp-app {
+  /* 1 dizayn pikseli = konteynerə sığan ən kiçik nisbət.
+     cq vahidləri istifadə yerində (nəsillərdə) .cp-app konteynerinə görə hesablanır. */
+  --u: min(calc(100cqw / 1080), calc(100cqh / 1920));
+
+  font-family: var(--font-base);
+  color: var(--c-text);
+}

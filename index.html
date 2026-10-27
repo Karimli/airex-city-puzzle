@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="az">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>AIREX — City Puzzle</title>
+  <link rel="icon" href="data:,">
+
+  <link rel="stylesheet" href="vendor/modern-normalize.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/game.css">
+
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div class="cp-app is-loading" data-cp-root>
+    <div class="cp-stage">
+
+      <header class="cp-header">
+        <span class="cp-header__logo" data-svg="logo" role="img" aria-label="AIREX"></span>
+        <span class="cp-header__brand">CITY PUZZLE</span>
+      </header>
+
+      <!-- 01 · RULES -->
+      <section class="cp-screen cp-screen--rules is-active" data-screen="rules">
+        <h1 class="cp-title cp-title--rules">
+          <span class="cp-title__accent">CITY PUZZLE</span><br>
+          OYUN QAYDALARI
+        </h1>
+
+        <ol class="cp-rules">
+          <li class="cp-rule">
+            <span class="cp-rule__num">1</span>
+            <p class="cp-rule__text">Boş xanaya toxun</p>
+            <span class="cp-rule__icon" data-svg="ruleTap" aria-hidden="true"></span>
+          </li>
+          <li class="cp-rule">
+            <span class="cp-rule__num">2</span>
+            <p class="cp-rule__text">Aşağıdan uyğun pazl hissəsini seç</p>
+            <span class="cp-rule__icon" data-svg="rulePuzzle" aria-hidden="true"></span>
+          </li>
+          <li class="cp-rule">
+            <span class="cp-rule__num">3</span>
+            <p class="cp-rule__text">Bütün 12 hissəni mümkün qədər tez tamamla</p>
+            <span class="cp-rule__icon" data-svg="ruleTimer" aria-hidden="true"></span>
+          </li>
+        </ol>
+
+        <button class="cp-button" type="button" data-action="continue">DAVAM ET</button>
+      </section>
+
+      <!-- 02 · START -->
+      <section class="cp-screen cp-screen--start" data-screen="start">
+        <h1 class="cp-title" data-city-title>BAKI</h1>
+
+        <img class="cp-start__image" data-city-image alt="Bakı">
+
+        <p class="cp-best-line">ƏN YAXŞI VAXT: <span class="cp-num" data-best>--:--</span></p>
+
+        <button class="cp-button" type="button" data-action="start">BAŞLA</button>
+      </section>
+
+      <!-- 03–06 · GAME -->
+      <section class="cp-screen cp-screen--game" data-screen="game">
+        <h1 class="cp-title" data-city-title>BAKI</h1>
+
+        <div class="cp-timers">
+          <div class="cp-timer">
+            <span class="cp-timer__label">VAXT</span>
+            <span class="cp-timer__value cp-num" data-time>00:00</span>
+          </div>
+          <div class="cp-timer cp-timer--best">
+            <span class="cp-timer__label">ƏN YAXŞI VAXT</span>
+            <span class="cp-timer__value cp-num" data-best>--:--</span>
+          </div>
+        </div>
+
+        <!-- BoardView: board.svg + yerləşmiş hissələr qatı -->
+        <div class="cp-board" data-board></div>
+
+        <p class="cp-hint">Boş xanaya toxun, sonra uyğun hissəni seç.</p>
+
+        <!-- TrayView: 12 hissə, hər oyunda random sıra -->
+        <div class="cp-tray" data-tray></div>
+      </section>
+
+      <!-- 07 · RESULT -->
+      <section class="cp-screen cp-screen--result" data-screen="result">
+        <h1 class="cp-title">NƏTİCƏ</h1>
+
+        <div class="cp-result">
+          <p class="cp-result__label">VAXT</p>
+          <p class="cp-result__time cp-num" data-result-time>00:00</p>
+          <p class="cp-result__record" data-record>YENİ REKORD!</p>
+          <p class="cp-best-line">ƏN YAXŞI VAXT: <span class="cp-num" data-best>--:--</span></p>
+        </div>
+
+        <img class="cp-result__image" data-city-image alt="Bakı">
+
+        <button class="cp-button" type="button" data-action="restart">YENİDƏN OYNA</button>
+      </section>
+
+    </div>
+  </div>
+</body>
+</html>

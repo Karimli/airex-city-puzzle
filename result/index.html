@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="az">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>AIREX — City Puzzle · Nəticələr</title>
+  <link rel="icon" href="data:,">
+
+  <link rel="stylesheet" href="../vendor/modern-normalize.css">
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/fonts.css">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/results.css">
+
+  <script type="module" src="../js/results/main.js"></script>
+</head>
+<body>
+  <div class="cp-results" data-results-root>
+
+    <header class="cp-results__header">
+      <span class="cp-results__logo" data-svg="logo" role="img" aria-label="AIREX"></span>
+      <span class="cp-results__brand">CITY PUZZLE</span>
+    </header>
+
+    <div class="cp-results__top">
+      <div>
+        <h1 class="cp-results__title">NƏTİCƏLƏR</h1>
+        <p class="cp-results__summary" data-summary></p>
+      </div>
+      <button class="cp-results__reset" type="button" data-action="ask-reset">SIFIRLA</button>
+    </div>
+
+    <table class="cp-table">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">SAAT</th>
+          <th scope="col">VAXT</th>
+        </tr>
+      </thead>
+      <!-- ResultsPage hər saat üçün bir <tbody> yaradır -->
+    </table>
+
+    <p class="cp-results__empty" data-empty>Hələ nəticə yoxdur.</p>
+
+    <dialog class="cp-dialog" data-reset-dialog aria-labelledby="cp-reset-title">
+      <h2 class="cp-dialog__title" id="cp-reset-title">Bütün nəticələr silinsin?</h2>
+      <p class="cp-dialog__text">Cədvəldəki bütün oyunlar və “ən yaxşı vaxt” sıfırlanacaq. Bu əməliyyatı geri qaytarmaq olmur.</p>
+      <div class="cp-dialog__actions">
+        <button class="cp-dialog__button" type="button" data-action="cancel-reset">İMTİNA ET</button>
+        <button class="cp-dialog__button cp-dialog__button--confirm" type="button" data-action="confirm-reset">TƏSDİQLƏ</button>
+      </div>
+    </dialog>
+
+  </div>
+</body>
+</html>

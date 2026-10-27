@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <path id="slot-0" class="slot" data-index="0" fill="transparent" d="M0 0L100 0L100 37.5A12.5 12.5 0 0 1 100 62.5L100 100L62.5 100A12.5 12.5 0 0 1 37.5 100L0 100Z"/>
+  <path id="slot-1" class="slot" data-index="1" fill="transparent" d="M100 0L200 0L200 37.5A12.5 12.5 0 0 0 200 62.5L200 100L162.5 100A12.5 12.5 0 0 0 137.5 100L100 100L100 62.5A12.5 12.5 0 0 0 100 37.5Z"/>
+  <path id="slot-2" class="slot" data-index="2" fill="transparent" d="M200 0L300 0L300 37.5A12.5 12.5 0 0 1 300 62.5L300 100L262.5 100A12.5 12.5 0 0 1 237.5 100L200 100L200 62.5A12.5 12.5 0 0 1 200 37.5Z"/>
+  <path id="slot-3" class="slot" data-index="3" fill="transparent" d="M300 0L400 0L400 100L362.5 100A12.5 12.5 0 0 0 337.5 100L300 100L300 62.5A12.5 12.5 0 0 0 300 37.5Z"/>
+  <path id="slot-4" class="slot" data-index="4" fill="transparent" d="M0 100L37.5 100A12.5 12.5 0 0 0 62.5 100L100 100L100 137.5A12.5 12.5 0 0 0 100 162.5L100 200L62.5 200A12.5 12.5 0 0 0 37.5 200L0 200Z"/>
+  <path id="slot-5" class="slot" data-index="5" fill="transparent" d="M100 100L137.5 100A12.5 12.5 0 0 1 162.5 100L200 100L200 137.5A12.5 12.5 0 0 1 200 162.5L200 200L162.5 200A12.5 12.5 0 0 1 137.5 200L100 200L100 162.5A12.5 12.5 0 0 1 100 137.5Z"/>
+  <path id="slot-6" class="slot" data-index="6" fill="transparent" d="M200 100L237.5 100A12.5 12.5 0 0 0 262.5 100L300 100L300 137.5A12.5 12.5 0 0 0 300 162.5L300 200L262.5 200A12.5 12.5 0 0 0 237.5 200L200 200L200 162.5A12.5 12.5 0 0 0 200 137.5Z"/>
+  <path id="slot-7" class="slot" data-index="7" fill="transparent" d="M300 100L337.5 100A12.5 12.5 0 0 1 362.5 100L400 100L400 200L362.5 200A12.5 12.5 0 0 1 337.5 200L300 200L300 162.5A12.5 12.5 0 0 1 300 137.5Z"/>
+  <path id="slot-8" class="slot" data-index="8" fill="transparent" d="M0 200L37.5 200A12.5 12.5 0 0 1 62.5 200L100 200L100 237.5A12.5 12.5 0 0 1 100 262.5L100 300L0 300Z"/>
+  <path id="slot-9" class="slot" data-index="9" fill="transparent" d="M100 200L137.5 200A12.5 12.5 0 0 0 162.5 200L200 200L200 237.5A12.5 12.5 0 0 0 200 262.5L200 300L100 300L100 262.5A12.5 12.5 0 0 0 100 237.5Z"/>
+  <path id="slot-10" class="slot" data-index="10" fill="transparent" d="M200 200L237.5 200A12.5 12.5 0 0 1 262.5 200L300 200L300 237.5A12.5 12.5 0 0 1 300 262.5L300 300L200 300L200 262.5A12.5 12.5 0 0 1 200 237.5Z"/>
+  <path id="slot-11" class="slot" data-index="11" fill="transparent" d="M300 200L337.5 200A12.5 12.5 0 0 0 362.5 200L400 200L400 300L300 300L300 262.5A12.5 12.5 0 0 0 300 237.5Z"/>
+</svg>
