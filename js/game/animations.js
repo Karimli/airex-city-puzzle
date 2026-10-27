@@ -48,19 +48,20 @@ export function flyFrom(element, firstRect, { reducedMotion = false } = {}) {
 }
 
 /**
- * Tamamlanma "firework"-ü: ardıcıl bir neçə incə qığılcım partlayışı.
- * Partlayışlar tünd fonda olur ki, aydın görünsün: board-un yanları və board-un altındakı
- * (puzzle bitəndə boşalan) tray sahəsi. Tamamlanmış şəklin üstündə lime qığılcımlar itir.
- * Mövqelər board-a nisbətəndir (x: 0..1 en, y: 1 = board-un hündürlüyü; >1 = board-un altı),
- * sürət və ölçülər board eninə görə miqyaslanır (800 = dizayn).
+ * Tamamlanma "firework"-ü: NƏTİCƏ ekranı açılanda ardıcıl bir neçə incə qığılcım partlayışı.
+ * Mövqelər nəticə şəklinə (800×600) nisbətəndir: x 0..1 = şəklin eni, y 0..1 = hündürlüyü,
+ * mənfi y = şəklin üstü (böyük vaxt sahəsi). Partlayışlar tünd fonda olur ki, aydın görünsün:
+ * böyük vaxtın yanları, vaxtla şəkil arasındakı zolaq və şəklin yanları (lime şəklin üstündə itir).
+ * Sürət və ölçülər şəklin eninə görə miqyaslanır (800 = dizayn).
  */
 const BURSTS = [
-  { at: 0, x: 0.5, y: 1.62, count: 46 },
-  { at: 240, x: 0.16, y: 1.38, count: 34 },
-  { at: 480, x: 0.84, y: 1.42, count: 34 },
-  { at: 760, x: -0.08, y: 0.55, count: 26 },
-  { at: 900, x: 1.08, y: 0.42, count: 26 },
-  { at: 1120, x: 0.5, y: 2.05, count: 40 },
+  { at: 0, x: 0.5, y: -0.12, count: 44 },
+  { at: 240, x: -0.06, y: -0.72, count: 30 },
+  { at: 460, x: 1.06, y: -0.68, count: 30 },
+  { at: 720, x: -0.08, y: 0.42, count: 26 },
+  { at: 880, x: 1.08, y: 0.5, count: 26 },
+  { at: 1120, x: 0.26, y: -0.11, count: 30 },
+  { at: 1280, x: 0.74, y: -0.1, count: 30 },
 ];
 const SPARK_LIFE_MS = [900, 1400];
 const SPEED = [200, 430]; // dizayn px / san
@@ -75,7 +76,7 @@ const DRAG = 0.22; // 1 saniyədə sürətin qalan hissəsi
 
 /**
  * @param {HTMLElement} host    Canvas-ın yerləşəcəyi element (position: relative), məs. səhnə
- * @param {HTMLElement} anchor  Partlayışların mərkəzləndiyi element (board)
+ * @param {HTMLElement} anchor  Partlayışların mövqeyinin hesablandığı element (nəticə şəkli)
  * @param {{ colors: string[], pixelRatio?: number, reducedMotion?: boolean }} options
  *   colors — birincisi əsas rəngdir (daha çox istifadə olunur)
  * @returns {Celebration}
