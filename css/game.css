@@ -124,8 +124,10 @@
   flex: none;
   grid-template-columns: repeat(4, calc(260 * var(--u)));
   grid-template-rows: repeat(3, calc(260 * var(--u)));
-  align-self: center; /* 1040 > 952: hər iki tərəfə bərabər çıxır */
-  margin: calc(20 * var(--u)) 0 auto;
+  /* Tray (1040) məzmun sahəsindən (952) enlidir. Mənfi margin-lər onun "tutduğu yeri" 952-yə endirir:
+     belə olmasa WebKit (iPhone) daşan elementi mərkəzə yox, sola düzür və tray sağa sürüşür. */
+  align-self: center;
+  margin: calc(20 * var(--u)) calc(-44 * var(--u)) auto;
 }
 
 .cp-tray__cell {
