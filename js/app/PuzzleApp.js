@@ -66,6 +66,9 @@ export class PuzzleApp {
   #animations = new Set();
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   #resultTimeout;
+  /** Hərəkətsizlik taymeri: `idleResetMs` ərzində toxunuş olmasa rules ekranına qayıdılır */
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #idleTimeout;
   /** Hər yeni oyunda artır: köhnə oyunun gecikmiş callback-ləri işləmir */
   #gameId = 0;
 
@@ -93,6 +96,7 @@ export class PuzzleApp {
       this.#handleAction(target.getAttribute('data-action') ?? '');
     }));
     this.root.addEventListener('contextmenu', this.#onContextMenu);
+    this.root.addEventListener('pointerdown', this.#onActivity, { capture: true });
 
     if (this.options.devMode) this.#mountDevButton();
 
@@ -116,6 +120,7 @@ export class PuzzleApp {
       el.classList.toggle('is-active', name === next);
     }
     this.state = next;
+    this.#armIdle();
   }
 
   /** Listener-ləri, taymeri, animasiyaları dayandırır; view-ları təmizləyir. */
@@ -124,6 +129,8 @@ export class PuzzleApp {
     for (const unbind of this.#unbinders) unbind();
     this.#unbinders = [];
     this.root.removeEventListener('contextmenu', this.#onContextMenu);
+    this.root.removeEventListener('pointerdown', this.#onActivity, { capture: true });
+    clearTimeout(this.#idleTimeout);
 
     this.#engine?.destroy();
     this.#board?.destroy();
@@ -243,6 +250,24 @@ export class PuzzleApp {
     this.#timer?.reset();
     this.root.querySelector('[data-record]')?.classList.remove('is-active');
   }
+
+  /**
+   * Hərəkətsizlik taymerini yenidən başladır. Rules ekranında (artıq başlanğıcdadır) işləmir.
+   * Yarımçıq oyun yazılmır, tam sıfırlanır.
+   */
+  #armIdle() {
+    clearTimeout(this.#idleTimeout);
+    const { idleResetMs } = this.options.settings;
+    if (!idleResetMs || this.state === 'rules' || this.state == null) return;
+    this.#idleTimeout = setTimeout(() => {
+      this.#resetGame();
+      this.show('rules');
+    }, idleResetMs);
+  }
+
+  #onActivity = () => {
+    this.#armIdle();
+  };
 
   #cancelGameWork() {
     clearTimeout(this.#resultTimeout);

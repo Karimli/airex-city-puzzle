@@ -62,7 +62,7 @@ export const SETTINGS = {
   restartTarget: 'rules',
   allowPieceFirst: true,
   errorResetMs: 700,
-  idleResetMs: 90000,
+  idleResetMs: 30000,
 };
 
 /**
