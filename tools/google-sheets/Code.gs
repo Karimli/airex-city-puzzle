@@ -3,6 +3,7 @@
  *
  * Kiosk hər bitmiş oyunu bu Web App-ə POST edir, nəticə "Nəticələr" vərəqinə yazılır.
  * Eyni nəticə iki dəfə gəlsə (internet kəsilib təkrar göndəriləndə), ID-yə görə təkrar yazılmır.
+ * /result səhifəsində SIFIRLA → { action: 'reset' } → başlıqdan başqa bütün sətirlər silinir.
  *
  * Quraşdırma: Extensions → Apps Script → bu kodu yapışdır → Deploy → New deployment → Web app
  *   Execute as: Me   ·   Who has access: Anyone
@@ -11,12 +12,18 @@
 const SHEET_NAME = 'Nəticələr';
 const HEADERS = ['ID', 'Tarix - saat', 'Vaxt', 'Vaxt (ms)', 'Şəhər'];
 
-/** Kioskdan gələn nəticələr: { results: [{ id, at, local, ms, city }] } */
+/**
+ * Kioskdan gələn sorğular:
+ *   { results: [{ id, at, local, ms, city }] }  → nəticələri yazır
+ *   { action: 'reset' }                          → bütün nəticələri silir
+ */
 function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (body.action === 'reset') return json_({ ok: true, cleared: clearResults_() });
+
     const incoming = Array.isArray(body.results) ? body.results : [];
     const sheet = getSheet_();
 
@@ -48,6 +55,17 @@ function doPost(e) {
 /** Brauzerdə linki açanda işlədiyini yoxlamaq üçün */
 function doGet() {
   return json_({ ok: true, sheet: SHEET_NAME });
+}
+
+/**
+ * Başlıq sətrindən başqa hər şeyi silir; silinən sətir sayını qaytarır.
+ * deleteRows yox, clearContent: dondurulmuş başlıqdan başqa bütün sətirləri silməyə Sheets icazə vermir.
+ */
+function clearResults_() {
+  const sheet = getSheet_();
+  const count = sheet.getLastRow() - 1;
+  if (count > 0) sheet.getRange(2, 1, count, sheet.getMaxColumns()).clearContent();
+  return Math.max(count, 0);
 }
 
 function getSheet_() {

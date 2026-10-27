@@ -4,13 +4,17 @@
  * @module results/main
  */
 
-import { CITY_BAKU, UI_ASSETS } from '../config.js';
+import { CITY_BAKU, SHEETS_URL, UI_ASSETS } from '../config.js';
 import { findRoot } from '../core/env.js';
 import { ResultsPage } from './ResultsPage.js';
 
 const root = findRoot('[data-results-root]');
 
 if (root) {
-  const page = new ResultsPage(root, { cityId: CITY_BAKU.id, logoUrl: `../${UI_ASSETS.logo}` });
+  const page = new ResultsPage(root, {
+    cityId: CITY_BAKU.id,
+    logoUrl: `../${UI_ASSETS.logo}`,
+    sheetsUrl: SHEETS_URL,
+  });
   page.mount().catch((error) => console.error('[CityPuzzle] Nəticələr səhifəsi açılmadı:', error));
 }

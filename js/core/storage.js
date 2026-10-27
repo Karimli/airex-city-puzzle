@@ -8,6 +8,7 @@
 const APP_PREFIX = 'airex.cityPuzzle.';
 const BEST_PREFIX = `${APP_PREFIX}best.`;
 const RESULTS_PREFIX = `${APP_PREFIX}results.`;
+const OUTBOX_KEY = `${APP_PREFIX}outbox`;
 /** Ən köhnələr silinir ki, localStorage limiti (≈5 MB) dolmasın */
 const MAX_RESULTS = 10000;
 
@@ -79,7 +80,40 @@ export function addResult(cityId, result) {
 }
 
 /**
- * Oyunun bütün məlumatlarını silir (nəticələr + ən yaxşı vaxt). Başqa saytların açarlarına toxunmur.
+ * @typedef {Object} OutboxItem  Google Sheets-ə hələ göndərilməmiş nəticə
+ * @property {string} id      Təkrar yazılmaması üçün unikal ID
+ * @property {number} at      Epoch ms
+ * @property {string} local   Kioskun yerli vaxtı: "dd.mm.yyyy - hh:mm:ss"
+ * @property {number} ms      Oyun müddəti
+ * @property {string} city
+ */
+
+/** @returns {OutboxItem[]} */
+export function getOutbox() {
+  try {
+    const raw = globalThis.localStorage?.getItem(OUTBOX_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter((item) => typeof item?.id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * @param {OutboxItem[]} items
+ * @returns {boolean}
+ */
+export function setOutbox(items) {
+  try {
+    globalThis.localStorage?.setItem(OUTBOX_KEY, JSON.stringify(items.slice(-MAX_RESULTS)));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Oyunun bütün məlumatlarını silir (nəticələr, ən yaxşı vaxt, göndərilməmiş növbə). Başqa saytların açarlarına toxunmur.
  * @returns {boolean}  Silinibsə true
  */
 export function clearAllData() {

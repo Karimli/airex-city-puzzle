@@ -164,6 +164,22 @@ body {
   line-height: 1.4;
 }
 
+.cp-dialog__error {
+  margin-top: 16px;
+  font-size: clamp(15px, 2.2vw, 22px);
+  line-height: 1.4;
+  color: var(--c-error);
+}
+
+.cp-dialog__error[hidden] {
+  display: none;
+}
+
+.cp-dialog__button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .cp-dialog__actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

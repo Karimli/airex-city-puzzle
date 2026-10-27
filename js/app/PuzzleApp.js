@@ -11,8 +11,9 @@ import { preloadAll } from '../core/assets.js';
 import { prefersReducedMotion } from '../core/env.js';
 import { shuffleUntilChanged } from '../core/shuffle.js';
 import { addResult, getBestTime, setBestTime } from '../core/storage.js';
+import { ResultSync, createId } from '../core/sync.js';
 import { onTap } from '../core/tap.js';
-import { Timer, formatTime } from '../core/Timer.js';
+import { Timer, formatDateTime, formatTime } from '../core/Timer.js';
 import { GameEngine } from '../game/GameEngine.js';
 import { BoardView } from '../game/BoardView.js';
 import { TrayView } from '../game/TrayView.js';
@@ -28,6 +29,7 @@ const RESULT_DELAY_MS = 500;
  * @property {import('../config.js').CityConfig} city
  * @property {import('../config.js').Settings} settings
  * @property {Record<string, string>} uiAssets  `data-svg` açarı → SVG yolu
+ * @property {string} sheetsUrl  Google Sheets Web App URL (boş → yalnız lokal)
  * @property {boolean} devMode  true → GAME ekranına dev düyməsi əlavə olunur (bölmə 9.1)
  */
 
@@ -54,6 +56,8 @@ export class PuzzleApp {
   #tray = null;
   /** @type {Timer | null} */
   #timer = null;
+  /** @type {ResultSync | null} */
+  #sync = null;
 
   /** Gedən "uçuş" animasiyaları; hamısı bitəndə engine kilidi açılır */
   /** @type {Set<Promise<void>>} */
@@ -92,6 +96,9 @@ export class PuzzleApp {
 
     if (this.options.devMode) this.#mountDevButton();
 
+    this.#sync = new ResultSync(this.options.sheetsUrl);
+    this.#sync.mount();
+
     const svgs = await this.#loadAssets();
     this.#mountGame(svgs);
     this.#renderBest();
@@ -122,7 +129,8 @@ export class PuzzleApp {
     this.#board?.destroy();
     this.#tray?.destroy();
     this.#timer?.destroy();
-    this.#engine = this.#board = this.#tray = this.#timer = null;
+    this.#sync?.destroy();
+    this.#engine = this.#board = this.#tray = this.#timer = this.#sync = null;
 
     this.#devButton?.remove();
     this.#devButton = null;
@@ -283,7 +291,9 @@ export class PuzzleApp {
     const best = getBestTime(city.id);
     const isRecord = best == null || elapsed < best;
     if (isRecord) setBestTime(city.id, elapsed);
-    addResult(city.id, { at: Date.now(), ms: elapsed });
+    const at = Date.now();
+    addResult(city.id, { at, ms: elapsed });
+    this.#sync?.queue({ id: createId(), at, local: formatDateTime(new Date(at)), ms: Math.round(elapsed), city: city.id });
 
     const timeEl = this.root.querySelector('[data-result-time]');
     if (timeEl) timeEl.textContent = formatTime(elapsed);

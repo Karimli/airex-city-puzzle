@@ -18,6 +18,20 @@ export function formatTime(ms) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+/** @param {number} n */
+const pad2 = (n) => String(n).padStart(2, '0');
+
+/**
+ * Yerli tarix və saat: `dd.mm.yyyy - hh:mm:ss` (nəticələr cədvəli və Google Sheets üçün).
+ * @param {Date} date
+ * @returns {string}
+ */
+export function formatDateTime(date) {
+  const day = `${pad2(date.getDate())}.${pad2(date.getMonth() + 1)}.${date.getFullYear()}`;
+  const clock = `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+  return `${day} - ${clock}`;
+}
+
 export class Timer {
   /** @type {(seconds: number) => void} */
   #onTick;

@@ -1,40 +1,35 @@
 /**
  * Nəticələr səhifəsi (/result): localStorage-dakı oyunlar cədvəldə (ən yaxşı birinci, sonra saata görə),
- * "SIFIRLA" → təsdiq popup-ı → oyunun bütün məlumatları silinir.
+ * "SIFIRLA" → təsdiq popup-ı → əvvəl Google Cədvəl (qoşulubsa), sonra bu cihazdakı bütün məlumatlar silinir.
  * @module results/ResultsPage
  */
 
 import { fetchSvg } from '../core/assets.js';
 import { onStorageChange } from '../core/env.js';
 import { clearAllData, getResults } from '../core/storage.js';
+import { resetRemote } from '../core/sync.js';
 import { onTap } from '../core/tap.js';
-import { formatTime } from '../core/Timer.js';
-
-/** @param {number} n */
-const pad = (n) => String(n).padStart(2, '0');
-
-/** @param {Date} d */
-const formatClock = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-
-/** @param {Date} d */
-const formatDate = (d) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+import { formatDateTime, formatTime } from '../core/Timer.js';
 
 export class ResultsPage {
   /** @type {HTMLElement} */
   root;
   #cityId;
   #logoUrl;
+  #sheetsUrl;
+  #isResetting = false;
   /** @type {Array<() => void>} */
   #unbinders = [];
 
   /**
    * @param {HTMLElement} root
-   * @param {{ cityId: string, logoUrl: string }} options
+   * @param {{ cityId: string, logoUrl: string, sheetsUrl: string }} options
    */
-  constructor(root, { cityId, logoUrl }) {
+  constructor(root, { cityId, logoUrl, sheetsUrl }) {
     this.root = root;
     this.#cityId = cityId;
     this.#logoUrl = logoUrl;
+    this.#sheetsUrl = sheetsUrl;
   }
 
   async mount() {
@@ -61,8 +56,7 @@ export class ResultsPage {
       const tr = body.insertRow();
       if (row === best) tr.className = 'cp-table__best';
       tr.insertCell().textContent = String(row.number);
-      const at = new Date(row.at);
-      tr.insertCell().textContent = `${formatDate(at)} - ${formatClock(at)}`;
+      tr.insertCell().textContent = formatDateTime(new Date(row.at));
       tr.insertCell().textContent = formatTime(row.ms);
     }
     table.append(body);
@@ -91,17 +85,48 @@ export class ResultsPage {
     const dialog = this.#dialog();
     switch (action) {
       case 'ask-reset':
+        this.#setResetState('idle');
         if (dialog && !dialog.open) dialog.showModal();
         break;
       case 'cancel-reset':
-        dialog?.close();
+        if (!this.#isResetting) dialog?.close();
         break;
       case 'confirm-reset':
-        clearAllData();
-        dialog?.close();
-        this.render();
+        this.#confirmReset();
         break;
     }
+  }
+
+  /**
+   * Əvvəl Google Cədvəl silinir; uğursuz olsa lokal məlumata toxunulmur ki, ikisi bir-birindən ayrılmasın.
+   */
+  async #confirmReset() {
+    if (this.#isResetting) return;
+    this.#isResetting = true;
+    this.#setResetState('busy');
+    try {
+      if (this.#sheetsUrl) await resetRemote(this.#sheetsUrl);
+      clearAllData();
+      this.#dialog()?.close();
+      this.render();
+    } catch {
+      this.#setResetState('error');
+    } finally {
+      this.#isResetting = false;
+    }
+  }
+
+  /** @param {'idle' | 'busy' | 'error'} state */
+  #setResetState(state) {
+    const confirm = /** @type {HTMLButtonElement | null} */ (this.root.querySelector('[data-action="confirm-reset"]'));
+    const cancel = /** @type {HTMLButtonElement | null} */ (this.root.querySelector('[data-action="cancel-reset"]'));
+    const error = /** @type {HTMLElement | null} */ (this.root.querySelector('[data-reset-error]'));
+    if (confirm) {
+      confirm.disabled = state === 'busy';
+      confirm.textContent = state === 'busy' ? 'SİLİNİR…' : state === 'error' ? 'YENİDƏN CƏHD ET' : 'TƏSDİQLƏ';
+    }
+    if (cancel) cancel.disabled = state === 'busy';
+    if (error) error.hidden = state !== 'error';
   }
 
   #dialog() {
