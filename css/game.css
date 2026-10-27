@@ -100,6 +100,7 @@
   top: calc(var(--row) * 100% / 3 - 100% / 12);
   width: 37.5%; /* xana × 1.5 */
   height: 50%;
+  margin: 0; /* tray-dəki mənfi margin board-da lazım deyil */
   transform-origin: 0 0;
 }
 
@@ -141,6 +142,9 @@
   position: relative;
   width: calc(300 * var(--u));
   height: calc(300 * var(--u));
+  /* Hissə (300) tray xanasından (260) böyükdür. Mənfi margin onun tutduğu yeri 260-a endirir ki,
+     xanada dəqiq mərkəzdə dursun (daşan grid elementi mərkəzə yox, sol-yuxarıya düzülür). */
+  margin: calc(-20 * var(--u));
   pointer-events: none; /* toxunma hədəfi .cp-tray__cell-dir */
 }
 

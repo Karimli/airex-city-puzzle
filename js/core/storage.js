@@ -47,6 +47,18 @@ export function setBestTime(cityId, ms) {
 }
 
 /**
+ * Ən yaxşı vaxtı silir (məs. Google Cədvəl sıfırlanıbsa).
+ * @param {string} cityId
+ */
+export function clearBestTime(cityId) {
+  try {
+    globalThis.localStorage?.removeItem(BEST_PREFIX + cityId);
+  } catch {
+    // localStorage əlçatmazdır — oyun yenə işləyir
+  }
+}
+
+/**
  * @param {string} cityId
  * @returns {GameResult[]}  Saxlanma sırası ilə (köhnədən yeniyə)
  */

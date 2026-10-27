@@ -10,8 +10,8 @@
 import { preloadAll } from '../core/assets.js';
 import { prefersReducedMotion } from '../core/env.js';
 import { shuffleUntilChanged } from '../core/shuffle.js';
-import { addResult, getBestTime, setBestTime } from '../core/storage.js';
-import { ResultSync, createId } from '../core/sync.js';
+import { addResult, clearBestTime, getBestTime, getOutbox, setBestTime } from '../core/storage.js';
+import { ResultSync, createId, fetchRemoteResults } from '../core/sync.js';
 import { onTap } from '../core/tap.js';
 import { Timer, formatDateTime, formatTime } from '../core/Timer.js';
 import { GameEngine } from '../game/GameEngine.js';
@@ -72,6 +72,8 @@ export class PuzzleApp {
   #idleTimeout;
   /** Hər yeni oyunda artır: köhnə oyunun gecikmiş callback-ləri işləmir */
   #gameId = 0;
+  /** Hər bitmiş oyunda artır: köhnə Sheets cavabı təzə rekordu əzməsin */
+  #completedCount = 0;
 
   /**
    * Konstruktorda side-effect yoxdur, başlatma `mount()` ilə edilir.
@@ -107,6 +109,7 @@ export class PuzzleApp {
     const svgs = await this.#loadAssets();
     this.#mountGame(svgs);
     this.#renderBest();
+    this.#refreshBestFromSheets();
     this.show('rules');
     this.root.classList.remove('is-loading');
   }
@@ -218,6 +221,7 @@ export class PuzzleApp {
     switch (action) {
       case 'continue':
         this.#renderBest();
+        this.#refreshBestFromSheets();
         this.show('start');
         break;
       case 'start':
@@ -325,6 +329,7 @@ export class PuzzleApp {
     const timeEl = this.root.querySelector('[data-result-time]');
     if (timeEl) timeEl.textContent = formatTime(elapsed);
     this.root.querySelector('[data-record]')?.classList.toggle('is-active', isRecord);
+    this.#completedCount++;
     this.#renderBest(isRecord ? elapsed : best);
 
     await Promise.all(this.#flights);
@@ -332,6 +337,27 @@ export class PuzzleApp {
     this.#resultTimeout = setTimeout(() => {
       if (gameId === this.#gameId) this.show('result');
     }, RESULT_DELAY_MS);
+  }
+
+  /**
+   * Ən yaxşı vaxtı Google Cədvəldən (+ bu cihazın hələ göndərilməmiş nəticələrindən) götürür,
+   * yerli yaddaşa yazır və göstərir. Beləcə bütün cihazlarda eyni olur; Cədvəl sıfırlanıbsa burada da sıfırlanır.
+   * İnternet yoxdursa heç nə dəyişmir — yerli dəyər qalır.
+   */
+  async #refreshBestFromSheets() {
+    const { sheetsUrl, city } = this.options;
+    if (!sheetsUrl) return;
+    const completedAtStart = this.#completedCount;
+    try {
+      const remote = await fetchRemoteResults(sheetsUrl);
+      if (completedAtStart !== this.#completedCount) return; // arada oyun bitib — onun nəticəsi daha təzədir
+      const times = [...remote.map((r) => r.ms), ...getOutbox().map((item) => item.ms)];
+      if (times.length) setBestTime(city.id, Math.min(...times));
+      else clearBestTime(city.id);
+      if (this.state !== 'game') this.#renderBest();
+    } catch {
+      // Sheets əlçatmazdır — yerli dəyər göstərilir
+    }
   }
 
   /**
