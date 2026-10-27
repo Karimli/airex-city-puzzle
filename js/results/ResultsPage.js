@@ -64,7 +64,9 @@ export class ResultsPage {
     const hasRows = results.length > 0;
     table.classList.toggle('has-rows', hasRows);
     /** @type {HTMLElement} */ (this.root.querySelector('[data-empty]')).hidden = hasRows;
-    /** @type {HTMLButtonElement} */ (this.root.querySelector('[data-action="ask-reset"]')).disabled = !hasRows;
+    // Sheets qoşulubsa, bu cihazda nəticə olmasa da Google Cədvəl sıfırlana bilər
+    /** @type {HTMLButtonElement} */ (this.root.querySelector('[data-action="ask-reset"]')).disabled =
+      !hasRows && !this.#sheetsUrl;
 
     const summary = this.root.querySelector('[data-summary]');
     if (summary) {

@@ -69,7 +69,7 @@ export const SETTINGS = {
  * Google Sheets Apps Script Web App URL-i (`…/exec`), bax: tools/google-sheets/Code.gs.
  * Boşdursa nəticələr yalnız bu cihazda (localStorage) saxlanılır.
  */
-export const SHEETS_URL = '';
+export const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyahXhleTQrSJqRLHYHDjN4R0qp_Pdj-F0D-LySZO0Lqbjw7HCnDtoQJ57Jt7ngG2AgzQ/exec';
 
 /** true → GAME ekranında dev düyməsi görünür. URL-də `?dev` də eyni effekti verir (bölmə 9.1). */
 export const DEBUG = false;
