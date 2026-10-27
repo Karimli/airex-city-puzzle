@@ -33,6 +33,11 @@ export function onStorageChange(handler) {
   return () => window.removeEventListener('storage', handler);
 }
 
+/** Səhifəni yenidən yükləyir (Service Worker yeni versiyanı aktivləşdirəndə). */
+export function reloadPage() {
+  if (typeof window !== 'undefined') window.location.reload();
+}
+
 /**
  * Oyunun kök elementini tapır.
  * @param {string} selector

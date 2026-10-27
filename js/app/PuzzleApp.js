@@ -31,6 +31,7 @@ const RESULT_DELAY_MS = 500;
  * @property {Record<string, string>} uiAssets  `data-svg` açarı → SVG yolu
  * @property {string} sheetsUrl  Google Sheets Web App URL (boş → yalnız lokal)
  * @property {boolean} devMode  true → GAME ekranına dev düyməsi əlavə olunur (bölmə 9.1)
+ * @property {(state: ScreenState) => void} [onScreenChange]  Ekran dəyişəndə (məs. yeniləməni rules-da tətbiq etmək üçün)
  */
 
 export class PuzzleApp {
@@ -121,6 +122,7 @@ export class PuzzleApp {
     }
     this.state = next;
     this.#armIdle();
+    this.options.onScreenChange?.(next);
   }
 
   /** Listener-ləri, taymeri, animasiyaları dayandırır; view-ları təmizləyir. */

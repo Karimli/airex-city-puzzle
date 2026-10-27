@@ -5,7 +5,8 @@
  */
 
 import { CITY_BAKU, SHEETS_URL, UI_ASSETS } from '../config.js';
-import { findRoot } from '../core/env.js';
+import { findRoot, reloadPage } from '../core/env.js';
+import { registerServiceWorker } from '../core/sw-register.js';
 import { ResultsPage } from './ResultsPage.js';
 
 const root = findRoot('[data-results-root]');
@@ -17,4 +18,5 @@ if (root) {
     sheetsUrl: SHEETS_URL,
   });
   page.mount().catch((error) => console.error('[CityPuzzle] Nəticələr səhifəsi açılmadı:', error));
+  registerServiceWorker({ url: '../sw.js', onUpdateReady: reloadPage });
 }
