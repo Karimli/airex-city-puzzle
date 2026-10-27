@@ -10,6 +10,8 @@
 import { getOutbox, setOutbox } from './storage.js';
 
 const REQUEST_TIMEOUT_MS = 15000;
+/** Bundan uzun "oyun" cədvəldəki səhv formatdan gəlir (məs. ms sütunu tarix kimi) — göstərilmir */
+const MAX_GAME_MS = 24 * 60 * 60 * 1000;
 const BATCH_SIZE = 200;
 
 /** @returns {string} */
@@ -57,7 +59,7 @@ export async function fetchRemoteResults(url) {
     if (!data?.ok || !Array.isArray(data.results)) throw new Error(data?.error ?? 'Naməlum cavab');
     return data.results
       .map((/** @type {any} */ r) => ({ local: String(r.local ?? ''), ms: Number(r.ms) }))
-      .filter((r) => r.local && Number.isFinite(r.ms) && r.ms > 0);
+      .filter((r) => r.local && Number.isFinite(r.ms) && r.ms > 0 && r.ms < MAX_GAME_MS);
   } finally {
     clearTimeout(timeoutId);
   }

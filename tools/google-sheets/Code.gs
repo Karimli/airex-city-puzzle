@@ -50,10 +50,7 @@ function doPost(e) {
       accepted.push(String(r.id || ''));
     }
     if (rows.length) {
-      const range = sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length);
-      // "00:47" Sheets-də saat:dəqiqə kimi oxunmasın: tarix və vaxt mətn formatında
-      range.offset(0, 0, rows.length, 2).setNumberFormat('@');
-      range.setValues(rows);
+      sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
     }
 
     return json_({ ok: true, saved: rows.length, accepted });
@@ -111,6 +108,10 @@ function getSheet_() {
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
   }
+  // Sütun formatları hər dəfə məcburi: A-B mətn ("00:47" saat kimi oxunmasın), C tam ədəd (ms).
+  // Vərəqdə köhnə format qalıbsa (məs. C saat formatında), mövcud sətirlər də özü düzəlir.
+  sheet.getRange('A:B').setNumberFormat('@');
+  sheet.getRange('C:C').setNumberFormat('0');
   return sheet;
 }
 
