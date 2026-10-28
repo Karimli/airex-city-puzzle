@@ -8,7 +8,7 @@
  */
 
 import { preloadAll } from '../core/assets.js';
-import { getPixelRatio, prefersReducedMotion, readCssVar } from '../core/env.js';
+import { getPixelRatio, isOnline, prefersReducedMotion, readCssVar } from '../core/env.js';
 import { shuffleUntilChanged } from '../core/shuffle.js';
 import { addResult, clearBestTime, getBestTime, getOutbox, setBestTime } from '../core/storage.js';
 import { ResultSync, createId, fetchRemoteResults } from '../core/sync.js';
@@ -21,6 +21,10 @@ import { celebrate, flyFrom } from '../game/animations.js';
 
 /** Son hissənin animasiyasından sonra RESULT-a qədər gözləmə (bölmə 2.2); firework RESULT-da oynayır */
 const RESULT_DELAY_MS = 500;
+/** Açılışda Sheets-dən ən yaxşı vaxtı ən çox bu qədər gözləyirik, sonra yerli dəyər göstərilir */
+const BEST_WAIT_MS = 5000;
+/** Ən yaxşı vaxt Sheets-dən gələnə qədər göstərilən yer tutucu (köhnə yerli rekord görünməsin) */
+const BEST_PENDING_TEXT = '…';
 
 /** @typedef {'rules' | 'start' | 'game' | 'result'} ScreenState */
 
@@ -76,6 +80,10 @@ export class PuzzleApp {
   #gameId = 0;
   /** Hər bitmiş oyunda artır: köhnə Sheets cavabı təzə rekordu əzməsin */
   #completedCount = 0;
+  /** Açılışda Sheets cavab verənə qədər true: "ƏN YAXŞI VAXT" yerində `…` (köhnə yerli rekord görünmür) */
+  #bestPending = false;
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #bestPendingTimeout;
 
   /**
    * Konstruktorda side-effect yoxdur, başlatma `mount()` ilə edilir.
@@ -110,6 +118,10 @@ export class PuzzleApp {
 
     const svgs = await this.#loadAssets();
     this.#mountGame(svgs);
+    if (this.options.sheetsUrl && isOnline()) {
+      this.#bestPending = true;
+      this.#bestPendingTimeout = setTimeout(() => this.#settleBest(), BEST_WAIT_MS);
+    }
     this.#renderBest();
     this.#refreshBestFromSheets();
     this.show('rules');
@@ -138,6 +150,7 @@ export class PuzzleApp {
     this.root.removeEventListener('contextmenu', this.#onContextMenu);
     this.root.removeEventListener('pointerdown', this.#onActivity, { capture: true });
     clearTimeout(this.#idleTimeout);
+    clearTimeout(this.#bestPendingTimeout);
 
     this.#engine?.destroy();
     this.#board?.destroy();
@@ -334,6 +347,7 @@ export class PuzzleApp {
     if (timeEl) timeEl.textContent = formatTime(elapsed);
     this.root.querySelector('[data-record]')?.classList.toggle('is-active', isRecord);
     this.#completedCount++;
+    this.#settleBest(false);
     this.#renderBest(isRecord ? elapsed : best);
 
     await Promise.all(this.#flights);
@@ -375,18 +389,34 @@ export class PuzzleApp {
       const times = [...remote.map((r) => r.ms), ...getOutbox().map((item) => item.ms)];
       if (times.length) setBestTime(city.id, Math.min(...times));
       else clearBestTime(city.id);
-      if (this.state !== 'game') this.#renderBest();
+      const wasPending = this.#bestPending;
+      this.#settleBest(false);
+      if (this.state !== 'game' || wasPending) this.#renderBest();
     } catch {
       // Sheets əlçatmazdır — yerli dəyər göstərilir
+      this.#settleBest();
     }
   }
 
   /**
+   * Gözləmə bitdi (cavab gəldi, xəta və ya `BEST_WAIT_MS`): bundan sonra yerli dəyər göstərilir.
+   * @param {boolean} [render]  true → dərhal yenidən çək
+   */
+  #settleBest(render = true) {
+    clearTimeout(this.#bestPendingTimeout);
+    if (!this.#bestPending) return;
+    this.#bestPending = false;
+    if (render) this.#renderBest();
+  }
+
+  /**
    * Bütün `[data-best]` yerlərində ən yaxşı vaxtı göstərir.
+   * Açılışda Sheets cavab verənə qədər (yalnız dəyər verilməyəndə) `…`.
    * @param {number | null} [best]  Verilməsə storage-dan oxunur
    */
-  #renderBest(best = getBestTime(this.options.city.id)) {
-    const text = formatTime(best);
+  #renderBest(best) {
+    const text = best === undefined && this.#bestPending ? BEST_PENDING_TEXT
+      : formatTime(best === undefined ? getBestTime(this.options.city.id) : best);
     for (const el of this.root.querySelectorAll('[data-best]')) el.textContent = text;
   }
 

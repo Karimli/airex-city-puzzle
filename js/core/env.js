@@ -50,6 +50,14 @@ export function getPixelRatio() {
   return Math.min(window.devicePixelRatio || 1, 2);
 }
 
+/**
+ * Brauzer internetə qoşuludurmu (Sheets-dən rekordu gözləməyə dəyərmi).
+ * @returns {boolean}
+ */
+export function isOnline() {
+  return globalThis.navigator?.onLine !== false;
+}
+
 /** Səhifəni yenidən yükləyir (Service Worker yeni versiyanı aktivləşdirəndə). */
 export function reloadPage() {
   if (typeof window !== 'undefined') window.location.reload();
